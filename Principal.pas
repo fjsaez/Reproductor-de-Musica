@@ -5,14 +5,11 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Media,
-  FMX.StdCtrls, FMX.Controls.Presentation, FMX.ListView.Types,
-  FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
-  System.Rtti, FMX.Grid.Style, FMX.Grid, FMX.ScrollBox, UtilesReproductor,
-  System.ImageList, FMX.ImgList, FMX.Layouts, FMX.ExtCtrls, FMX.Edit,
-  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
+  FMX.StdCtrls, FMX.Controls.Presentation, System.Rtti, FMX.Grid.Style, FMX.Grid,
+  FMX.ScrollBox, FMX.ExtCtrls, UtilesReproductor, FireDAC.Comp.Client,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param, FMX.Edit,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
-  FireDAC.Stan.Async, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet,
-  FireDAC.Comp.Client, FMX.Objects;
+  FireDAC.Stan.Async, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FMX.Objects;
 
 type
 
@@ -25,7 +22,7 @@ type
     ODialog: TOpenDialog;
     SGrid: TStringGrid;
     LVolumen: TLabel;
-    TrackBar: TTrackBar;
+    TrackVolumen: TTrackBar;
     BSelCarpeta: TButton;
     SColNombre: TStringColumn;
     SColTiempo: TStringColumn;
@@ -50,24 +47,25 @@ type
     Label1: TLabel;
     Rectangle2: TRectangle;
     LTransc: TLabel;
-    Track: TTrackBar;
+    TrackTiempo: TTrackBar;
     LTotal: TLabel;
     BAcerca: TButton;
     ImgAcerca: TImage;
+    SColNumero: TStringColumn;
     procedure BSelArchivoClick(Sender: TObject);
     procedure BPlayClick(Sender: TObject);
     procedure BPausaClick(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
-    procedure TrackBarChange(Sender: TObject);
+    procedure TrackVolumenChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure BSelCarpetaClick(Sender: TObject);
     procedure SGridCellDblClick(const Column: TColumn; const Row: Integer);
     procedure SGridCellClick(const Column: TColumn; const Row: Integer);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure BPararClick(Sender: TObject);
-    procedure TrackClick(Sender: TObject);
+    procedure TrackTiempoClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure TrackTracking(Sender: TObject);
+    procedure TrackTiempoTracking(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
     procedure BVaciarClick(Sender: TObject);
     procedure BRetrocederClick(Sender: TObject);
@@ -127,9 +125,11 @@ begin
   for I:=Low(Pista) to High(Pista) do
   begin
     SGrid.RowCount:=SGrid.RowCount+1;
-    SGrid.Cells[0,I]:=Pista[I].Nombre;
-    SGrid.Cells[1,I]:=Pista[I].TxtDuracion;
+    SGrid.Cells[0,I]:=(I+1).ToString;
+    SGrid.Cells[1,I]:=Pista[I].Nombre;
+    SGrid.Cells[2,I]:=Pista[I].TxtDuracion;
   end;
+  AjustarCamposStringGrid(SGrid);
 end;
 
 procedure TFPrinc.RecorrerDirectorio(sRuta: String);
@@ -179,18 +179,27 @@ var
 begin
   Parar:=false;
   for I:=SGrid.Row to SGrid.RowCount-1 do
-  begin
+  begin            {
     ActivaBotones(false,true,true);
     MPlayer.FileName:=Pista[I].Ruta+Pista[I].Nombre;
-    MuestraDatos(Pista[I].Nombre,Pista[I].TxtDuracion);
+    MuestraDatos((I+1).ToString+'.- '+Pista[I].Nombre,Pista[I].TxtDuracion);
     Tiempo:=DecodificaTiempo(MPlayer.Duration);
     Timer1.Enabled:=true;
     Timer2.Enabled:=Timer1.Enabled;                    //esto es una prueba
-    MPlayer.Volume:=TrackBar.Value;
+    MPlayer.Volume:=TrackVolumen.Value;
+    MPlayer.CurrentTime:=TiempoActual;
+    MPlayer.Play; }
+    ActivaBotones(false,true,true);
+    MuestraDatos((I+1).ToString+'.- '+Pista[I].Nombre,Pista[I].TxtDuracion);
+    Tiempo:=DecodificaTiempo(Pista[I].Duracion);
+    Timer1.Enabled:=true;
+    Timer2.Enabled:=Timer1.Enabled;
+    MPlayer.FileName:=Pista[I].Ruta+Pista[I].Nombre;
+    MPlayer.Volume:=TrackVolumen.Value;
     MPlayer.CurrentTime:=TiempoActual;
     MPlayer.Play;
     while (MPlayer.CurrentTime<MPlayer.Duration) and not Parar do
-    //while MPlayer.State=TMediaState.Playing do
+    //while (MPlayer.State=TMediaState.Playing) and not Parar do
     begin
       Application.ProcessMessages;
       if Parar then
@@ -238,7 +247,7 @@ begin
   MPlayer.Stop;
   MPLayer.CurrentTime:=0;
   TiempoActual:=0;
-  Track.Value:=0;
+  TrackTiempo.Value:=0;
   Timer1.Enabled:=false;
   Timer2.Enabled:=Timer1.Enabled;                  //esto es una prueba
   LTransc.Text:='00:00:00';
@@ -321,32 +330,37 @@ end;
 
 //// Timers y trackbars ////
 
+{Timer que obtiene el tiempo transcurrido de la pista en curso. Intervalo=100}
 procedure TFPrinc.Timer1Timer(Sender: TObject);
 begin
   if MPLayer.CurrentTime=MPLayer.Duration then TiempoActual:=0
   else TiempoActual:=MPLayer.CurrentTime;
+end;
+
+{Timer que controla el trackbar de tiempo de la pista en curso. Intervalo=500}
+procedure TFPrinc.Timer2Timer(Sender: TObject);
+begin
+  TrackTiempo.Value:=TiempoActual*100/MPlayer.Duration;
   LTransc.Text:=DecodificaTiempo(TiempoActual).FrmCadena;
 end;
 
-procedure TFPrinc.Timer2Timer(Sender: TObject);
+procedure TFPrinc.TrackTiempoClick(Sender: TObject);
 begin
-  Track.Value:=TiempoActual*100/MPlayer.Duration;       //esto es una prueba!!!
+  if TrackTiempo.Tracking then
+    MPlayer.CurrentTime:=TiempoActual;
 end;
 
-procedure TFPrinc.TrackBarChange(Sender: TObject);
+procedure TFPrinc.TrackTiempoTracking(Sender: TObject);
 begin
-  MPlayer.Volume:=TrackBar.Value;
-  LVolumen.Text:='Volumen: '+Trunc(TrackBar.Value*20).ToString;
+  TiempoActual:=Trunc(TrackTiempo.Value*MPlayer.Duration/100);    //el deslizado!!
 end;
 
-procedure TFPrinc.TrackClick(Sender: TObject);
+procedure TFPrinc.TrackVolumenChange(Sender: TObject);
 begin
-  MPlayer.CurrentTime:=TiempoActual;
-end;
-
-procedure TFPrinc.TrackTracking(Sender: TObject);
-begin
-  TiempoActual:=Trunc(Track.Value*MPlayer.Duration/100);    //el deslizado!!
+  MPlayer.Volume:=TrackVolumen.Value;
+  Config.Volumen:=TrackVolumen.Value;
+  LVolumen.Text:='Volumen: '+Trunc(TrackVolumen.Value*20).ToString;
+  GuardarConfig(Query);
 end;
 
 //// Formulario principal ////
@@ -361,9 +375,8 @@ end;
 
 procedure TFPrinc.FormCreate(Sender: TObject);
 begin
-  TrackBar.Value:=0.7;   //de momento así, pero se pondrá en la configuración
-  MPlayer.Volume:=TrackBar.Value;
-  LVolumen.Text:='Volumen: '+Trunc(TrackBar.Value*20).ToString;
+  TrackVolumen.Value:=Config.Volumen;
+  LVolumen.Text:='Volumen: '+Trunc(TrackVolumen.Value*20).ToString;
   Parar:=false;
 end;
 
@@ -372,25 +385,19 @@ begin
   SGrid.RowCount:=0;
   SetLength(Pista,0);
   //se revisa si hay pistas en la BD:
-  try
-    Query.SQL.Text:='select * from listado';
-    Query.Open;
-    with Query do
-      if RecordCount>0 then  //de haberlas...:
-      begin
-        while not Eof do
-        begin           //se carga array Pista:
-          CargarPista(FieldByName('Ruta').AsString,FieldByName('Pista').AsString,
-            FieldByName('TxtDuracion').AsString,FieldByName('Duracion').AsLargeInt);
-          Next;
-        end;
-        CargarSGrid;    //se carga el stringgrid
+  Query.SQL.Text:='select * from listado';
+  Query.Open;
+  with Query do
+    if RecordCount>0 then  //de haberlas...:
+    begin
+      while not Eof do
+      begin           //se carga array Pista:
+        CargarPista(FieldByName('Ruta').AsString,FieldByName('Pista').AsString,
+          FieldByName('TxtDuracion').AsString,FieldByName('Duracion').AsLargeInt);
+        Next;
       end;
-  except
-    ShowMessage('No se encontró el archivo ReproMusica.db o está dañado.'+
-                #13#10+'La aplicación se cerrará.');
-    Application.Terminate;
-  end;
+      CargarSGrid;    //se carga el stringgrid
+    end;
   BarraStatus;
 end;
 

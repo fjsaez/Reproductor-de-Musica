@@ -13,4 +13,9 @@ object DMod: TDMod
     Left = 48
     Top = 32
   end
+  object Query: TFDQuery
+    Connection = FDConn
+    Left = 160
+    Top = 32
+  end
 end

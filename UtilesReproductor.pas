@@ -2,9 +2,14 @@ unit UtilesReproductor;
 
 interface
 
-uses System.SysUtils, FMX.Media, FireDAC.Comp.Client, FMX.Dialogs;
+uses System.SysUtils, FMX.Media, FireDAC.Comp.Client, FMX.Dialogs, FMX.Grid,
+  FMX.Grid.Style, FMX.ScrollBox;
 
 type
+  TConfig = record
+    Volumen: single;
+  end;
+
   TPista = record
     Nombre,
     Ruta,
@@ -26,10 +31,13 @@ type
   function TotalTiempoLista: string;
   function ExtraerNombreArchivo(const Arch: string): string;
   function ExtraerRuta(const Arch: string): string;
+  procedure AjustarCamposStringGrid(var xGrid: TStringGrid);
   procedure CargarPista(Ruta,Nombre,Duracion: string; DTDuracion: TMediaTime);
   procedure InsertarEnBD(var Qr: TFDQuery);
+  procedure GuardarConfig(var Qr: TFDQuery);
 
 var
+  Config: TConfig;
   Tiempo: TTiempo;
   Pista: TAPista;
   Parar: boolean;
@@ -40,7 +48,6 @@ function DecodificaTiempo(Tmp: TMediaTime): TTiempo;
 var
   Hh,Mm,Ss,Ms: word;
 begin
-
   DecodeTime(Tmp.ToDateTime,Hh,Mm,Ss,Ms);
   result.Horas:=Hh;
   result.Minutos:=Mm;
@@ -83,6 +90,26 @@ begin
   Result:=Copy(Arch,1,I);
 end;
 
+procedure AjustarCamposStringGrid(var xGrid: TStringGrid);
+const
+  Sep=20;
+var
+  X,Y: integer;
+  Mayor: single;
+begin
+  with xGrid do
+    for X:=0 to ColumnCount-1 do
+    begin
+      Mayor:=0;
+      for Y:=0 to RowCount-1 do
+        if Canvas.TextWidth(Cells[X,Y])>Mayor then
+          Mayor:=Canvas.TextWidth(Cells[X,Y]);
+      if Canvas.TextWidth(Columns[X].Header)>Mayor then
+        Columns[X].Width:=Canvas.TextWidth(Columns[X].Header)+Sep
+      else Columns[X].Width:=Mayor+Sep;
+    end;
+end;
+
 procedure CargarPista(Ruta,Nombre,Duracion: string; DTDuracion: TMediaTime);
 begin
   SetLength(Pista,Length(Pista)+1);
@@ -112,6 +139,13 @@ begin
     Qr.ParamByName('txd').AsString:=Pista[I].TxtDuracion;
     Qr.ExecSQL;
   end;
+end;
+
+procedure GuardarConfig(var Qr: TFDQuery);
+begin    //agregar aquí los campos que se vayan incorporando a tabla config:
+  Qr.SQL.Text:='update config set Volumen=:vol';
+  Qr.ParamByName('vol').AsSingle:=Config.Volumen;
+  Qr.ExecSQL;
 end;
 
 end.
