@@ -55,6 +55,7 @@ const
 var
   HayError: boolean;
 begin
+  HayError:=false;
   if FileExists(BD) then
   begin
     try

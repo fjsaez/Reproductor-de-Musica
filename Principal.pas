@@ -71,6 +71,7 @@ type
     procedure BRetrocederClick(Sender: TObject);
     procedure BAvanzarClick(Sender: TObject);
     procedure BAcercaClick(Sender: TObject);
+    procedure TrackTiempoChange(Sender: TObject);
   private
     { Private declarations }
     procedure BarraStatus;
@@ -87,6 +88,7 @@ type
 var
   FPrinc: TFPrinc;
   TiempoActual: TMediaTime;
+  TrackTiempoEsMovido: boolean;
 
 implementation
 
@@ -179,16 +181,7 @@ var
 begin
   Parar:=false;
   for I:=SGrid.Row to SGrid.RowCount-1 do
-  begin            {
-    ActivaBotones(false,true,true);
-    MPlayer.FileName:=Pista[I].Ruta+Pista[I].Nombre;
-    MuestraDatos((I+1).ToString+'.- '+Pista[I].Nombre,Pista[I].TxtDuracion);
-    Tiempo:=DecodificaTiempo(MPlayer.Duration);
-    Timer1.Enabled:=true;
-    Timer2.Enabled:=Timer1.Enabled;                    //esto es una prueba
-    MPlayer.Volume:=TrackVolumen.Value;
-    MPlayer.CurrentTime:=TiempoActual;
-    MPlayer.Play; }
+  begin
     ActivaBotones(false,true,true);
     MuestraDatos((I+1).ToString+'.- '+Pista[I].Nombre,Pista[I].TxtDuracion);
     Tiempo:=DecodificaTiempo(Pista[I].Duracion);
@@ -344,10 +337,18 @@ begin
   LTransc.Text:=DecodificaTiempo(TiempoActual).FrmCadena;
 end;
 
+procedure TFPrinc.TrackTiempoChange(Sender: TObject);
+begin
+  if TrackTiempoEsMovido then
+  begin
+    MPlayer.CurrentTime:=TiempoActual;
+    TrackTiempoEsMovido:=false;
+  end;
+end;
+
 procedure TFPrinc.TrackTiempoClick(Sender: TObject);
 begin
-  if TrackTiempo.Tracking then
-    MPlayer.CurrentTime:=TiempoActual;
+  TrackTiempoEsMovido:=true;
 end;
 
 procedure TFPrinc.TrackTiempoTracking(Sender: TObject);
@@ -392,11 +393,14 @@ begin
     begin
       while not Eof do
       begin           //se carga array Pista:
-        CargarPista(FieldByName('Ruta').AsString,FieldByName('Pista').AsString,
-          FieldByName('TxtDuracion').AsString,FieldByName('Duracion').AsLargeInt);
+        if FileExists(FieldByName('Ruta').AsString+FieldByName('Pista').AsString) then
+          CargarPista(FieldByName('Ruta').AsString,FieldByName('Pista').AsString,
+            FieldByName('TxtDuracion').AsString,FieldByName('Duracion').AsLargeInt);
         Next;
       end;
       CargarSGrid;    //se carga el stringgrid
+      //en caso de que falten pistas:
+      if Length(Pista)<RecordCount then InsertarEnBD(Query);
     end;
   BarraStatus;
 end;
