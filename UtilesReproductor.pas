@@ -40,7 +40,6 @@ var
   Config: TConfig;
   Tiempo: TTiempo;
   Pista: TAPista;
-  Parar: boolean;
 
 implementation
 

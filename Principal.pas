@@ -60,7 +60,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure BSelCarpetaClick(Sender: TObject);
     procedure SGridCellDblClick(const Column: TColumn; const Row: Integer);
-    procedure SGridCellClick(const Column: TColumn; const Row: Integer);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure BPararClick(Sender: TObject);
     procedure TrackTiempoClick(Sender: TObject);
@@ -89,6 +88,7 @@ var
   FPrinc: TFPrinc;
   TiempoActual: TMediaTime;
   TrackTiempoEsMovido: boolean;
+  NumPistaActual: integer;
 
 implementation
 
@@ -179,36 +179,17 @@ procedure TFPrinc.BPlayClick(Sender: TObject);
 var
   I: integer;
 begin
-  Parar:=false;
-  for I:=SGrid.Row to SGrid.RowCount-1 do
-  begin
     ActivaBotones(false,true,true);
-    MuestraDatos((I+1).ToString+'.- '+Pista[I].Nombre,Pista[I].TxtDuracion);
-    Tiempo:=DecodificaTiempo(Pista[I].Duracion);
+    MuestraDatos((SGrid.Row+1).ToString+'.- '+Pista[SGrid.Row].Nombre,
+                 Pista[SGrid.Row].TxtDuracion);
+    Tiempo:=DecodificaTiempo(Pista[SGrid.Row].Duracion);
     Timer1.Enabled:=true;
     Timer2.Enabled:=Timer1.Enabled;
-    MPlayer.FileName:=Pista[I].Ruta+Pista[I].Nombre;
+    MPlayer.FileName:=Pista[SGrid.Row].Ruta+Pista[SGrid.Row].Nombre;
     MPlayer.Volume:=TrackVolumen.Value;
-    MPlayer.CurrentTime:=TiempoActual;
+    if SGrid.Row=NumPistaActual then MPlayer.CurrentTime:=TiempoActual
+                                else MPlayer.CurrentTime:=0;
     MPlayer.Play;
-    while (MPlayer.CurrentTime<MPlayer.Duration) and not Parar do
-    //while (MPlayer.State=TMediaState.Playing) and not Parar do
-    begin
-      Application.ProcessMessages;
-      if Parar then
-      begin
-        MPlayer.Stop;
-        Break;
-      end;
-    end;
-    if MPlayer.State=TMediaState.Playing then
-    begin
-      SGrid.Row:=SGrid.Row+1;
-      TiempoActual:=0;
-    end;
-    if Parar then Break;
-  end;
-  ActivaBotones(false,false,false);
 end;
 
 procedure TFPrinc.BAvanzarClick(Sender: TObject);
@@ -229,20 +210,19 @@ begin
     if MPlayer.State=TMediaState.Playing then MPlayer.Stop;
     Timer1.Enabled:=not (MPlayer.State=TMediaState.Playing);
     TiempoActual:=MPLayer.CurrentTime;
-    Timer2.Enabled:=Timer1.Enabled;              //esto es una prueba
+    Timer2.Enabled:=Timer1.Enabled;
   end;
 end;
 
 procedure TFPrinc.BPararClick(Sender: TObject);
 begin
   ActivaBotones(true,false,false);
-  Parar:=true;
   MPlayer.Stop;
   MPLayer.CurrentTime:=0;
   TiempoActual:=0;
   TrackTiempo.Value:=0;
   Timer1.Enabled:=false;
-  Timer2.Enabled:=Timer1.Enabled;                  //esto es una prueba
+  Timer2.Enabled:=Timer1.Enabled;
   LTransc.Text:='00:00:00';
 end;
 
@@ -285,7 +265,7 @@ begin
       SGrid.Row:=0;
       BarraStatus;
     except
-      //no mostrar nada...
+      ShowMessage('No fue posible cargar el(los) archivo(s) de esta carpeta');
     end;
     Aviso(false);
   end;
@@ -310,11 +290,6 @@ end;
 
 //// StringGrid ////
 
-procedure TFPrinc.SGridCellClick(const Column: TColumn; const Row: Integer);
-begin
-  ActivaBotones(SGrid.Cells[0,Row]<>'',false,false);
-end;
-
 procedure TFPrinc.SGridCellDblClick(const Column: TColumn; const Row: Integer);
 begin
   TiempoActual:=0;
@@ -328,6 +303,16 @@ procedure TFPrinc.Timer1Timer(Sender: TObject);
 begin
   if MPLayer.CurrentTime=MPLayer.Duration then TiempoActual:=0
   else TiempoActual:=MPLayer.CurrentTime;
+  if (MPlayer.State=TMediaState.Playing) and (MPlayer.CurrentTime=MPlayer.Duration) then
+  begin
+    if SGrid.Row<SGrid.RowCount-1 then
+    begin
+      SGrid.Row:=SGrid.Row+1;
+      BPlayClick(Self);
+    end
+    else BPararClick(Self);
+    NumPistaActual:=SGrid.Row;
+  end;
 end;
 
 {Timer que controla el trackbar de tiempo de la pista en curso. Intervalo=500}
@@ -353,7 +338,7 @@ end;
 
 procedure TFPrinc.TrackTiempoTracking(Sender: TObject);
 begin
-  TiempoActual:=Trunc(TrackTiempo.Value*MPlayer.Duration/100);    //el deslizado!!
+  TiempoActual:=Trunc(TrackTiempo.Value*MPlayer.Duration/100);  //el deslizado!!
 end;
 
 procedure TFPrinc.TrackVolumenChange(Sender: TObject);
@@ -376,9 +361,9 @@ end;
 
 procedure TFPrinc.FormCreate(Sender: TObject);
 begin
+  NumPistaActual:=-1;
   TrackVolumen.Value:=Config.Volumen;
   LVolumen.Text:='Volumen: '+Trunc(TrackVolumen.Value*20).ToString;
-  Parar:=false;
 end;
 
 procedure TFPrinc.FormShow(Sender: TObject);
@@ -401,6 +386,11 @@ begin
       CargarSGrid;    //se carga el stringgrid
       //en caso de que falten pistas:
       if Length(Pista)<RecordCount then InsertarEnBD(Query);
+      if Length(Pista)>0 then
+      begin
+        ActivaBotones(true,false,false);
+        SGrid.Row:=0;
+      end;
     end;
   BarraStatus;
 end;
