@@ -1,4 +1,4 @@
-unit Principal;
+﻿unit Principal;
 
 interface
 
@@ -145,7 +145,7 @@ begin
   iResultado:=FindFirst(sRuta+'*.mp3',FaAnyfile,Directorio);
   while iResultado=0 do
   begin
-    // �No es el nombre de una unidad ni un directorio?
+    // ¿No es el nombre de una unidad ni un directorio?
     if (Directorio.Attr and faVolumeId<>faVolumeID) then
     begin
       MPlayer.FileName:=sRuta+Directorio.Name;
@@ -176,8 +176,6 @@ end;
 //// Botones ////
 
 procedure TFPrinc.BPlayClick(Sender: TObject);
-var
-  I: integer;
 begin
     ActivaBotones(false,true,true);
     MuestraDatos((SGrid.Row+1).ToString+'.- '+Pista[SGrid.Row].Nombre,

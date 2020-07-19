@@ -1,4 +1,4 @@
-unit DataMod;
+ï»¿unit DataMod;
 
 interface
 
@@ -33,7 +33,7 @@ implementation
 
 procedure TDMod.CargarConfig;
 begin
-  //se carga la configuración; se crea el único registro en caso de no existir:
+  //se carga la configuraciÃ³n; se crea el Ãºnico registro en caso de no existir:
   Query.SQL.Text:='select * from config';
   Query.Open;
   if Query.IsEmpty then   //valores por defecto:
@@ -44,7 +44,7 @@ begin
     Query.ExecSQL;
   end
   else
-  begin    //poner aquí posibles campos de config en el futuro:
+  begin    //poner aquÃ­ posibles campos de config en el futuro:
     Config.Volumen:=Query.FieldByName('Volumen').AsSingle;
   end;
 end;
@@ -65,14 +65,14 @@ begin
     except
       HayError:=true;
       ShowMessage('No fue posible abrir el archivo '+BD+'.'+
-                  #13#10+'La aplicación se cerrará.');
+                  #13#10+'La aplicaciÃ³n se cerrarÃ¡.');
     end;
   end
   else
   begin
     HayError:=true;
-    ShowMessage('No se encontró el archivo '+BD+'.'+
-                #13#10+'La aplicación se cerrará.');
+    ShowMessage('No se encontrÃ³ el archivo '+BD+'.'+
+                #13#10+'La aplicaciÃ³n se cerrarÃ¡.');
   end;
   if HayError then Application.Terminate;
 end;

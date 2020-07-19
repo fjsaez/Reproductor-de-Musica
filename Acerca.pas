@@ -21,8 +21,9 @@ type
     Label6: TLabel;
     Label7: TLabel;
     Label8: TLabel;
-    Label9: TLabel;
+    LVersion: TLabel;
     procedure Button1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -39,6 +40,15 @@ implementation
 procedure TFAcerca.Button1Click(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TFAcerca.FormCreate(Sender: TObject);
+begin
+  {$IFDEF 64_BITS}
+    LVersion.Text:='v1.0 (64 bits)';
+  {$ELSE}
+    LVersion.Text:='v1.0 (32 bits)';
+  {$ENDIF}
 end;
 
 end.

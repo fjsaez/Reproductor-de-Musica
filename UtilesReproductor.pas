@@ -89,8 +89,10 @@ begin
   Result:=Copy(Arch,1,I);
 end;
 
-procedure AjustarCamposStringGrid(var xGrid: TStringGrid);
-const
+
+procedure AjustarCamposStringGrid(var xGrid: TStringGrid);
+
+const
   Sep=20;
 var
   X,Y: integer;
@@ -141,7 +143,7 @@ begin
 end;
 
 procedure GuardarConfig(var Qr: TFDQuery);
-begin    //agregar aquí los campos que se vayan incorporando a tabla config:
+begin    //agregar aquÃ­ los campos que se vayan incorporando a tabla config:
   Qr.SQL.Text:='update config set Volumen=:vol';
   Qr.ParamByName('vol').AsSingle:=Config.Volumen;
   Qr.ExecSQL;
