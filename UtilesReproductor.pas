@@ -1,20 +1,23 @@
-unit UtilesReproductor;
+﻿unit UtilesReproductor;
 
 interface
 
 uses System.SysUtils, FMX.Media, FireDAC.Comp.Client, FMX.Dialogs, FMX.Grid,
-  FMX.Grid.Style, FMX.ScrollBox;
+  FMX.Grid.Style, FMX.ScrollBox, FMX.Controls, FMX.Graphics, FMX.Forms;
 
 type
   TConfig = record
     Volumen: single;
+    NumPistaActual: integer;
+    TiempoActual: TMediaTime;
   end;
 
   TPista = record
-    Nombre,
-    Ruta,
-    TxtDuracion: string;
-    Duracion: TMediaTime;
+    Nombre,                  //nombre del archivo sin extensión .mp3
+    NombreArch,              //nombre del archivo con extensión .mp3
+    Ruta,                    //la ruta del archivo .mp3
+    TxtDuracion: string;     //la duración de la pista, pero en formato 00:00:00
+    Duracion: TMediaTime;    //la duración de la pista
   end;
 
   TAPista = array of TPista;
@@ -32,7 +35,7 @@ type
   function ExtraerNombreArchivo(const Arch: string): string;
   function ExtraerRuta(const Arch: string): string;
   procedure AjustarCamposStringGrid(var xGrid: TStringGrid);
-  procedure CargarPista(Ruta,Nombre,Duracion: string; DTDuracion: TMediaTime);
+  procedure CargarPista(Ruta,NombreArch,Duracion: string; DTDuracion: TMediaTime);
   procedure InsertarEnBD(var Qr: TFDQuery);
   procedure GuardarConfig(var Qr: TFDQuery);
 
@@ -91,7 +94,6 @@ end;
 
 
 procedure AjustarCamposStringGrid(var xGrid: TStringGrid);
-
 const
   Sep=20;
 var
@@ -111,11 +113,12 @@ begin
     end;
 end;
 
-procedure CargarPista(Ruta,Nombre,Duracion: string; DTDuracion: TMediaTime);
+procedure CargarPista(Ruta,NombreArch,Duracion: string; DTDuracion: TMediaTime);
 begin
   SetLength(Pista,Length(Pista)+1);
+  Pista[High(Pista)].Nombre:=Copy(NombreArch,1,Length(NombreArch)-4);
   Pista[High(Pista)].Ruta:=Ruta;
-  Pista[High(Pista)].Nombre:=Nombre;
+  Pista[High(Pista)].NombreArch:=NombreArch;
   Pista[High(Pista)].TxtDuracion:=Duracion;
   Pista[High(Pista)].Duracion:=DTDuracion;
 end;
@@ -134,7 +137,7 @@ begin
                  'Duracion,TxtDuracion) values (:nro,:rta,:pst,:trc,:drc,:txd)';
     Qr.ParamByName('nro').AsInteger:=I;
     Qr.ParamByName('rta').AsString:=Pista[I].Ruta;
-    Qr.ParamByName('pst').AsString:=Pista[I].Nombre;
+    Qr.ParamByName('pst').AsString:=Pista[I].NombreArch;
     Qr.ParamByName('trc').AsLargeInt:=0;
     Qr.ParamByName('drc').AsLargeInt:=Pista[I].Duracion;
     Qr.ParamByName('txd').AsString:=Pista[I].TxtDuracion;
@@ -144,8 +147,11 @@ end;
 
 procedure GuardarConfig(var Qr: TFDQuery);
 begin    //agregar aquí los campos que se vayan incorporando a tabla config:
-  Qr.SQL.Text:='update config set Volumen=:vol';
+  Qr.SQL.Text:='update config set Volumen=:vol,NumPistaActual=:npa,'+
+               'TiempoActual=:tac';
   Qr.ParamByName('vol').AsSingle:=Config.Volumen;
+  Qr.ParamByName('npa').AsInteger:=Config.NumPistaActual;
+  Qr.ParamByName('tac').AsLargeInt:=Config.TiempoActual;
   Qr.ExecSQL;
 end;
 

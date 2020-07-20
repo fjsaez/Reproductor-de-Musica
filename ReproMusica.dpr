@@ -1,4 +1,4 @@
-program ReproMusica;
+﻿program ReproMusica;
 
 uses
   System.StartUpCopy,
@@ -12,7 +12,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.Title:='Reproductor de m�sica';
+  Application.Title:='Reproductor de música';
   Application.CreateForm(TDMod, DMod);
   Application.CreateForm(TFPrinc, FPrinc);
   Application.Run;

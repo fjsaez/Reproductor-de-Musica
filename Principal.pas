@@ -116,7 +116,7 @@ begin
   AniInd.Visible:=Activo;
   AniInd.Enabled:=Activo;
   LAviso.Visible:=Activo;
-  if Activo then Application.ProcessMessages;
+  //if Activo then Application.ProcessMessages;
 end;
 
 procedure TFPrinc.CargarSGrid;
@@ -134,7 +134,7 @@ begin
   AjustarCamposStringGrid(SGrid);
 end;
 
-procedure TFPrinc.RecorrerDirectorio(sRuta: String);
+procedure TFPrinc.RecorrerDirectorio(sRuta: string);
 var
   Directorio: TSearchRec;
   iResultado: Integer;
@@ -169,6 +169,7 @@ begin
             else SGrid.Row:=SGrid.Row-1;    //retroceder
   MPlayer.FileName:=Pista[SGrid.Row].Ruta+Pista[SGrid.Row].Nombre;
   TiempoActual:=0;
+  NumPistaActual:=SGrid.Row;
   MPLayer.CurrentTime:=TiempoActual;
   BPlayClick(Self);
 end;
@@ -177,17 +178,18 @@ end;
 
 procedure TFPrinc.BPlayClick(Sender: TObject);
 begin
-    ActivaBotones(false,true,true);
-    MuestraDatos((SGrid.Row+1).ToString+'.- '+Pista[SGrid.Row].Nombre,
-                 Pista[SGrid.Row].TxtDuracion);
-    Tiempo:=DecodificaTiempo(Pista[SGrid.Row].Duracion);
-    Timer1.Enabled:=true;
-    Timer2.Enabled:=Timer1.Enabled;
-    MPlayer.FileName:=Pista[SGrid.Row].Ruta+Pista[SGrid.Row].Nombre;
-    MPlayer.Volume:=TrackVolumen.Value;
-    if SGrid.Row=NumPistaActual then MPlayer.CurrentTime:=TiempoActual
-                                else MPlayer.CurrentTime:=0;
-    MPlayer.Play;
+  ActivaBotones(false,true,true);
+  MuestraDatos((SGrid.Row+1).ToString+'.- '+Pista[SGrid.Row].Nombre,
+               Pista[SGrid.Row].TxtDuracion);
+  Tiempo:=DecodificaTiempo(Pista[SGrid.Row].Duracion);
+  Timer1.Enabled:=true;
+  Timer2.Enabled:=Timer1.Enabled;
+  MPlayer.FileName:=Pista[SGrid.Row].Ruta+Pista[SGrid.Row].NombreArch;
+  MPlayer.Volume:=TrackVolumen.Value;
+  if SGrid.Row=NumPistaActual then
+    MPlayer.CurrentTime:=TiempoActual
+  else MPlayer.CurrentTime:=0;
+  MPlayer.Play;
 end;
 
 procedure TFPrinc.BAvanzarClick(Sender: TObject);
@@ -335,8 +337,8 @@ begin
 end;
 
 procedure TFPrinc.TrackTiempoTracking(Sender: TObject);
-begin
-  TiempoActual:=Trunc(TrackTiempo.Value*MPlayer.Duration/100);  //el deslizado!!
+begin                 //el deslizado!!:
+  TiempoActual:=Trunc(TrackTiempo.Value*MPlayer.Duration/100);
 end;
 
 procedure TFPrinc.TrackVolumenChange(Sender: TObject);
@@ -351,7 +353,10 @@ end;
 
 procedure TFPrinc.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  BPararClick(Self);
+  //BPararClick(Self);
+  Config.TiempoActual:=TiempoActual;
+  Config.NumPistaActual:=SGrid.Row;
+  GuardarConfig(Query);
   DMod.FDConn.Connected:=false;
   CanClose:=true;
   Application.Terminate;
@@ -359,7 +364,8 @@ end;
 
 procedure TFPrinc.FormCreate(Sender: TObject);
 begin
-  NumPistaActual:=-1;
+  TiempoActual:=Config.TiempoActual;
+  NumPistaActual:=Config.NumPistaActual;
   TrackVolumen.Value:=Config.Volumen;
   LVolumen.Text:='Volumen: '+Trunc(TrackVolumen.Value*20).ToString;
 end;
@@ -381,15 +387,26 @@ begin
             FieldByName('TxtDuracion').AsString,FieldByName('Duracion').AsLargeInt);
         Next;
       end;
-      CargarSGrid;    //se carga el stringgrid
+      CargarSGrid;
       //en caso de que falten pistas:
-      if Length(Pista)<RecordCount then InsertarEnBD(Query);
-      if Length(Pista)>0 then
+      if Length(Pista)=RecordCount then
       begin
-        ActivaBotones(true,false,false);
-        SGrid.Row:=0;
-      end;
+        MPlayer.FileName:=Pista[NumPistaActual].Ruta+Pista[NumPistaActual].NombreArch;
+        MPlayer.CurrentTime:=TiempoActual;
+        TrackTiempo.Value:=TiempoActual*100/MPlayer.Duration;
+        LTransc.Text:=DecodificaTiempo(TiempoActual).FrmCadena;
+        SGrid.Row:=Config.NumPistaActual;
+        MuestraDatos((SGrid.Row+1).ToString+'.- '+Pista[SGrid.Row].Nombre,
+               Pista[SGrid.Row].TxtDuracion);
+      end
+      else
+        if (Length(Pista)>0) and (Length(Pista)<RecordCount) then
+        begin
+          SGrid.Row:=0;
+          InsertarEnBD(Query);
+        end
     end;
+  ActivaBotones(true,false,false);
   BarraStatus;
 end;
 

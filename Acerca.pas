@@ -1,4 +1,4 @@
-unit Acerca;
+﻿unit Acerca;
 
 interface
 

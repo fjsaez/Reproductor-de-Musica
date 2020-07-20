@@ -39,13 +39,15 @@ begin
   if Query.IsEmpty then   //valores por defecto:
   begin
     Config.Volumen:=0.7;
-    Query.SQL.Text:='insert into config (Volumen) values (:vol)';
-    Query.ParamByName('vol').AsSingle:=Config.Volumen;
-    Query.ExecSQL;
+    Config.NumPistaActual:=-1;
+    Config.TiempoActual:=0;
+    GuardarConfig(Query);
   end
   else
   begin    //poner aquí posibles campos de config en el futuro:
     Config.Volumen:=Query.FieldByName('Volumen').AsSingle;
+    Config.NumPistaActual:=Query.FieldByName('NumPistaActual').AsInteger;
+    Config.TiempoActual:=Query.FieldByName('TiempoActual').AsLargeInt;
   end;
 end;
 
