@@ -108,7 +108,8 @@ begin
   BPausa.Enabled:=CondPausa;
   BParar.Enabled:=CondParar;
   BAvanzar.Enabled:=SGrid.Row<SGrid.RowCount-1;
-  BRetroceder.Enabled:=SGrid.Row>0;
+  BRetroceder.Enabled:=(SGrid.Row>0) and (SGrid.RowCount>=1);
+  TrackTiempo.Enabled:=CondPlay or CondPausa or CondParar;
 end;
 
 procedure TFPrinc.Aviso(Activo: boolean);
@@ -167,7 +168,7 @@ procedure TFPrinc.CambiarPista(Opcion: boolean);
 begin
   if Opcion then SGrid.Row:=SGrid.Row+1     //avanzar
             else SGrid.Row:=SGrid.Row-1;    //retroceder
-  MPlayer.FileName:=Pista[SGrid.Row].Ruta+Pista[SGrid.Row].Nombre;
+  MPlayer.FileName:=Pista[SGrid.Row].Ruta+Pista[SGrid.Row].NombreArch;
   TiempoActual:=0;
   NumPistaActual:=SGrid.Row;
   MPLayer.CurrentTime:=TiempoActual;
@@ -244,6 +245,7 @@ begin
       end;
       InsertarEnBD(Query);  //se carga en la BD
       CargarSGrid;          //se carga en el stringgrid
+      ActivaBotones(true,false,false);
       BarraStatus;
     except
       ShowMessage('No se puede cargar el archivo '+ODialog.FileName);
@@ -263,6 +265,7 @@ begin
       CargarSGrid;
       InsertarEnBD(Query);  //se carga en la BD
       SGrid.Row:=0;
+      ActivaBotones(true,false,false);
       BarraStatus;
     except
       ShowMessage('No fue posible cargar el(los) archivo(s) de esta carpeta');
@@ -285,6 +288,17 @@ begin
   Pista:=nil;                    //el array
   Query.SQL.Text:='delete from listado';
   Query.ExecSQL;                //la tabla 'listado'
+  LArchivo.Text:='';
+
+  MPLayer.Stop;
+  TiempoActual:=0;
+  TrackTiempo.Value:=0;
+  Timer1.Enabled:=false;
+  Timer2.Enabled:=Timer1.Enabled;
+  LTransc.Text:='00:00:00';
+  LTotal.Text:='00:00:00';
+
+  ActivaBotones(false,false,false);
   BarraStatus;
 end;
 
@@ -298,7 +312,7 @@ end;
 
 //// Timers y trackbars ////
 
-{Timer que obtiene el tiempo transcurrido de la pista en curso. Intervalo=100}
+{Timer que obtiene el tiempo transcurrido de la pista en curso. Intervalo=500}
 procedure TFPrinc.Timer1Timer(Sender: TObject);
 begin
   if MPLayer.CurrentTime=MPLayer.Duration then TiempoActual:=0
@@ -334,11 +348,13 @@ end;
 procedure TFPrinc.TrackTiempoClick(Sender: TObject);
 begin
   TrackTiempoEsMovido:=true;
+  TrackTiempoChange(Self);  //prueba
 end;
 
 procedure TFPrinc.TrackTiempoTracking(Sender: TObject);
 begin                 //el deslizado!!:
   TiempoActual:=Trunc(TrackTiempo.Value*MPlayer.Duration/100);
+  LTransc.Text:=DecodificaTiempo(TiempoActual).FrmCadena;
 end;
 
 procedure TFPrinc.TrackVolumenChange(Sender: TObject);
@@ -406,7 +422,7 @@ begin
           InsertarEnBD(Query);
         end
     end;
-  ActivaBotones(true,false,false);
+  ActivaBotones(SGrid.RowCount>0,false,false);
   BarraStatus;
 end;
 

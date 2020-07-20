@@ -5,8 +5,8 @@ uses
   FMX.Forms,
   Principal in 'Principal.pas' {FPrinc},
   UtilesReproductor in 'UtilesReproductor.pas',
-  DataMod in 'DataMod.pas' {DMod: TDataModule},
-  Acerca in 'Acerca.pas' {FAcerca};
+  Acerca in 'Acerca.pas' {FAcerca},
+  DataMod in 'DataMod.pas' {DMod: TDataModule};
 
 {$R *.res}
 

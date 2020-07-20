@@ -6,7 +6,7 @@
         <MainSource>ReproMusica.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1119</TargetedPlatforms>
         <AppType>Application</AppType>
     </PropertyGroup>
@@ -319,7 +319,7 @@
         <VerInfo_Locale>8202</VerInfo_Locale>
         <Icon_MainIcon>ReproMusica_Icon2.ico</Icon_MainIcon>
         <UWP_DelphiLogo150>D:\Users\Francisco Sáez\Documents\Embarcadero\Studio\Projects\Reproductor de audio\Imagen\rep_música_png.png</UWP_DelphiLogo150>
-        <VerInfo_Keys>CompanyName=Sáez Sistemas;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=ReproMusica.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=Simplísimo reproductor de archivos MP3</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Sáez Sistemas;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=Reproductor de Música;LegalCopyright=;LegalTrademarks=;OriginalFilename=ReproMusica.exe;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=Simplísimo reproductor de archivos MP3</VerInfo_Keys>
         <DCC_Define>64_BITS;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <ItemGroup>
@@ -331,14 +331,14 @@
             <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="UtilesReproductor.pas"/>
+        <DCCReference Include="Acerca.pas">
+            <Form>FAcerca</Form>
+            <FormType>fmx</FormType>
+        </DCCReference>
         <DCCReference Include="DataMod.pas">
             <Form>DMod</Form>
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="Acerca.pas">
-            <Form>FAcerca</Form>
-            <FormType>fmx</FormType>
         </DCCReference>
         <None Include="ModelSupport_ReproMusica\default.txaPackage"/>
         <BuildConfiguration Include="Release">
