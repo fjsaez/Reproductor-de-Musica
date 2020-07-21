@@ -12,7 +12,6 @@ type
     Rectangle1: TRectangle;
     Rectangle2: TRectangle;
     Image1: TImage;
-    Button1: TButton;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -22,8 +21,9 @@ type
     Label7: TLabel;
     Label8: TLabel;
     LVersion: TLabel;
-    procedure Button1Click(Sender: TObject);
+    CornerButton1: TCornerButton;
     procedure FormCreate(Sender: TObject);
+    procedure CornerButton1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -37,7 +37,9 @@ implementation
 
 {$R *.fmx}
 
-procedure TFAcerca.Button1Click(Sender: TObject);
+uses Principal;
+
+procedure TFAcerca.CornerButton1Click(Sender: TObject);
 begin
   Close;
 end;

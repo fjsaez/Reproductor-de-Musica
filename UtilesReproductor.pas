@@ -3,7 +3,8 @@
 interface
 
 uses System.SysUtils, FMX.Media, FireDAC.Comp.Client, FMX.Dialogs, FMX.Grid,
-  FMX.Grid.Style, FMX.ScrollBox, FMX.Controls, FMX.Graphics, FMX.Forms;
+  FMX.Grid.Style, FMX.ScrollBox, FMX.Controls, FMX.Graphics, FMX.Forms,
+  FMX.StdCtrls;
 
 type
   TConfig = record
@@ -125,8 +126,9 @@ end;
 
 procedure InsertarEnBD(var Qr: TFDQuery);
 var
-  I: integer;
+  I,TotPista: integer;
 begin
+  TotPista:=Length(Pista);
   Qr.Close;
   Qr.SQL.Text:='delete from listado';
   Qr.ExecSQL;
@@ -156,3 +158,29 @@ begin    //agregar aquí los campos que se vayan incorporando a tabla config:
 end;
 
 end.
+
+(*
+procedure InsertarEnBD(var Qr: TFDQuery);
+var
+  I: integer;
+begin
+  NumRegistro:=0;
+  Qr.Close;
+  Qr.SQL.Text:='delete from listado';
+  Qr.ExecSQL;
+  for I:=Low(Pista) to High(Pista) do
+  begin
+    Qr.Close;
+    Qr.SQL.Text:='insert into listado (Numero,Ruta,Pista,Transcurrido,'+
+                 'Duracion,TxtDuracion) values (:nro,:rta,:pst,:trc,:drc,:txd)';
+    Qr.ParamByName('nro').AsInteger:=I;
+    Qr.ParamByName('rta').AsString:=Pista[I].Ruta;
+    Qr.ParamByName('pst').AsString:=Pista[I].NombreArch;
+    Qr.ParamByName('trc').AsLargeInt:=0;
+    Qr.ParamByName('drc').AsLargeInt:=Pista[I].Duracion;
+    Qr.ParamByName('txd').AsString:=Pista[I].TxtDuracion;
+    Qr.ExecSQL;
+    NumRegistro:=NumRegistro+1;
+  end;
+end;
+*)

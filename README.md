@@ -4,29 +4,34 @@
 
 ## Descripción
 
-Simplísimo reproductor de archivos MP3. Puede cargar uno o más archivos en un listado. Tiene capacidad de ejecutar, pausar, detener, adelantar y retroceder una pista. En resumen, tiene las funcionalidades mínimas de cualquier reproductor de audio.
+Simplísimo reproductor de archivos MP3. Puede cargar uno o más archivos en un listado. Está en capacidad de ejecutar, pausar, detener, adelantar y retroceder una pista. En resumen, tiene las funcionalidades mínimas de cualquier reproductor de audio, sin más.
 
-**Aún en fase de desarrollo**, aunque ya es totalmente funcional.
+## Notas
+
+* Compilado para 32 y 64 bits.
+* No se usó ningún skin, aunque hay la intención de incorporarle alguno más adelante.
+* **Aún en fase de desarrollo**, pero ya es totalmente funcional.
+* Es desarrollado únicamente con intenciones de aprendizaje.
 
 ---
 
 ## Lenguaje/framework/base de datos
 
-Desarrollado en Delphi 1.2, usando Firemokey como framework. Se emplearon sólo componentes nativos. Se usó SQLite como SGBD. 
-
-Compilado para 32 y 64 bits.
+* Lenguaje: Delphi 10.2 Tokyo, empleando sólo componentes nativos. 
+* Framework: Firemonkey. 
+* Base de datos: SQLite v3.
 
 ---
 
 ## Autor
 
-Ing. Francisco J. Sáez S.
+Ing. Francisco José Sáez Soto.
 
 e-mail: **fjsaez@gmail.com**
 
 LinkedIn: **linkedin.com/francisco-josé-sáez-soto**
 
-LinkedIn: **github.com/fjsaez**
+GitHub: **github.com/fjsaez**
 
 ---
 

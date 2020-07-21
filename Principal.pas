@@ -15,7 +15,6 @@ type
 
   TFPrinc = class(TForm)
     MPlayer: TMediaPlayer;
-    BSelArchivo: TButton;
     BPlay: TButton;
     BPausa: TButton;
     Timer1: TTimer;
@@ -23,18 +22,14 @@ type
     SGrid: TStringGrid;
     LVolumen: TLabel;
     TrackVolumen: TTrackBar;
-    BSelCarpeta: TButton;
     SColNombre: TStringColumn;
     SColTiempo: TStringColumn;
-    AniInd: TAniIndicator;
-    LAviso: TLabel;
     BParar: TButton;
     SBar: TStatusBar;
     EStatus1: TEdit;
     Query: TFDQuery;
     EStatus2: TEdit;
     Timer2: TTimer;
-    BVaciar: TButton;
     ImgPlay: TImage;
     ImgPausa: TImage;
     ImgParar: TImage;
@@ -52,13 +47,20 @@ type
     BAcerca: TButton;
     ImgAcerca: TImage;
     SColNumero: TStringColumn;
-    procedure BSelArchivoClick(Sender: TObject);
+    PrgBar: TProgressBar;
+    EAviso: TEdit;
+    TimerAviso: TTimer;
+    StyleBook: TStyleBook;
+    BSelArchivo: TCornerButton;
+    BSelCarpeta: TCornerButton;
+    BVaciar: TCornerButton;
+    procedure BSelArchivo1Click(Sender: TObject);
     procedure BPlayClick(Sender: TObject);
     procedure BPausaClick(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TrackVolumenChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure BSelCarpetaClick(Sender: TObject);
+    procedure BSelCarpeta1Click(Sender: TObject);
     procedure SGridCellDblClick(const Column: TColumn; const Row: Integer);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure BPararClick(Sender: TObject);
@@ -66,11 +68,13 @@ type
     procedure FormShow(Sender: TObject);
     procedure TrackTiempoTracking(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
-    procedure BVaciarClick(Sender: TObject);
+    procedure BVaciar1Click(Sender: TObject);
     procedure BRetrocederClick(Sender: TObject);
     procedure BAvanzarClick(Sender: TObject);
     procedure BAcercaClick(Sender: TObject);
     procedure TrackTiempoChange(Sender: TObject);
+    procedure TimerAvisoTimer(Sender: TObject);
+    procedure PrgBarMouseEnter(Sender: TObject);
   private
     { Private declarations }
     procedure BarraStatus;
@@ -80,6 +84,7 @@ type
     procedure RecorrerDirectorio(sRuta: String);
     procedure MuestraDatos(Nombre,Duracion: string);
     procedure CambiarPista(Opcion: boolean);
+    procedure ActivarTimers(Activo: boolean);
   public
     { Public declarations }
   end;
@@ -89,6 +94,7 @@ var
   TiempoActual: TMediaTime;
   TrackTiempoEsMovido: boolean;
   NumPistaActual: integer;
+  Porcentaje: string;
 
 implementation
 
@@ -114,10 +120,12 @@ end;
 
 procedure TFPrinc.Aviso(Activo: boolean);
 begin
-  AniInd.Visible:=Activo;
-  AniInd.Enabled:=Activo;
-  LAviso.Visible:=Activo;
-  //if Activo then Application.ProcessMessages;
+  if Activo then
+  begin
+    EAviso.Text:='Cargando listado... ';
+    Application.ProcessMessages;
+  end
+  else EAviso.Text:='';
 end;
 
 procedure TFPrinc.CargarSGrid;
@@ -164,6 +172,12 @@ begin
   LTotal.Text:=Duracion;
 end;
 
+procedure TFPrinc.PrgBarMouseEnter(Sender: TObject);
+begin
+  PrgBar.Hint:='Pista Nº '+(SGrid.Row+1).ToString+' de '+SGrid.RowCount.ToString+
+    ' ('+Round((SGrid.Row+1)*100/SGrid.RowCount).ToString+' %)';
+end;
+
 procedure TFPrinc.CambiarPista(Opcion: boolean);
 begin
   if Opcion then SGrid.Row:=SGrid.Row+1     //avanzar
@@ -175,16 +189,22 @@ begin
   BPlayClick(Self);
 end;
 
+procedure TFPrinc.ActivarTimers(Activo: boolean);
+begin
+  Timer1.Enabled:=Activo;
+  Timer2.Enabled:=Activo;
+end;
+
 //// Botones ////
 
 procedure TFPrinc.BPlayClick(Sender: TObject);
 begin
+  PrgBar.Value:=(SGrid.Row+1)*100/Length(Pista);
   ActivaBotones(false,true,true);
   MuestraDatos((SGrid.Row+1).ToString+'.- '+Pista[SGrid.Row].Nombre,
                Pista[SGrid.Row].TxtDuracion);
   Tiempo:=DecodificaTiempo(Pista[SGrid.Row].Duracion);
-  Timer1.Enabled:=true;
-  Timer2.Enabled:=Timer1.Enabled;
+  ActivarTimers(true);
   MPlayer.FileName:=Pista[SGrid.Row].Ruta+Pista[SGrid.Row].NombreArch;
   MPlayer.Volume:=TrackVolumen.Value;
   if SGrid.Row=NumPistaActual then
@@ -222,12 +242,11 @@ begin
   MPLayer.CurrentTime:=0;
   TiempoActual:=0;
   TrackTiempo.Value:=0;
-  Timer1.Enabled:=false;
-  Timer2.Enabled:=Timer1.Enabled;
+  ActivarTimers(false);
   LTransc.Text:='00:00:00';
 end;
 
-procedure TFPrinc.BSelArchivoClick(Sender: TObject);
+procedure TFPrinc.BSelArchivo1Click(Sender: TObject);
 var
   Tmp: TTiempo;
   I: integer;
@@ -243,8 +262,10 @@ begin
           ExtraerNombreArchivo(ODialog.Files.Strings[I]),
           Tmp.FrmCadena,MPlayer.Duration);
       end;
+      Aviso(true);
       InsertarEnBD(Query);  //se carga en la BD
-      CargarSGrid;          //se carga en el stringgrid
+      Aviso(false);
+      CargarSGrid;                     //se carga en el stringgrid
       ActivaBotones(true,false,false);
       BarraStatus;
     except
@@ -253,7 +274,7 @@ begin
   end;
 end;
 
-procedure TFPrinc.BSelCarpetaClick(Sender: TObject);
+procedure TFPrinc.BSelCarpeta1Click(Sender: TObject);
 var
   Carpeta: string;
 begin
@@ -282,22 +303,20 @@ begin
   end;
 end;
 
-procedure TFPrinc.BVaciarClick(Sender: TObject);
+procedure TFPrinc.BVaciar1Click(Sender: TObject);
 begin
   SGrid.RowCount:=0;             //el stringrid
   Pista:=nil;                    //el array
+  PrgBar.Value:=0;
   Query.SQL.Text:='delete from listado';
   Query.ExecSQL;                //la tabla 'listado'
   LArchivo.Text:='';
-
   MPLayer.Stop;
   TiempoActual:=0;
   TrackTiempo.Value:=0;
-  Timer1.Enabled:=false;
-  Timer2.Enabled:=Timer1.Enabled;
+  ActivarTimers(false);
   LTransc.Text:='00:00:00';
   LTotal.Text:='00:00:00';
-
   ActivaBotones(false,false,false);
   BarraStatus;
 end;
@@ -336,6 +355,12 @@ begin
   LTransc.Text:=DecodificaTiempo(TiempoActual).FrmCadena;
 end;
 
+procedure TFPrinc.TimerAvisoTimer(Sender: TObject);
+begin  //por ahora no es posible mostrar el porcentaje. de momento no lo borraré
+  EAviso.Text:='Cargando listado... '+Porcentaje;
+  Application.ProcessMessages;
+end;
+
 procedure TFPrinc.TrackTiempoChange(Sender: TObject);
 begin
   if TrackTiempoEsMovido then
@@ -348,7 +373,7 @@ end;
 procedure TFPrinc.TrackTiempoClick(Sender: TObject);
 begin
   TrackTiempoEsMovido:=true;
-  TrackTiempoChange(Self);  //prueba
+  TrackTiempoChange(Self);
 end;
 
 procedure TFPrinc.TrackTiempoTracking(Sender: TObject);
@@ -369,7 +394,6 @@ end;
 
 procedure TFPrinc.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  //BPararClick(Self);
   Config.TiempoActual:=TiempoActual;
   Config.NumPistaActual:=SGrid.Row;
   GuardarConfig(Query);
@@ -419,9 +443,12 @@ begin
         if (Length(Pista)>0) and (Length(Pista)<RecordCount) then
         begin
           SGrid.Row:=0;
+          Aviso(true);
           InsertarEnBD(Query);
+          Aviso(false);
         end
     end;
+  PrgBar.Value:=(SGrid.Row+1)*100/Length(Pista);
   ActivaBotones(SGrid.RowCount>0,false,false);
   BarraStatus;
 end;
