@@ -135,8 +135,8 @@ begin
   for I:=Low(Pista) to High(Pista) do
   begin
     Qr.Close;
-    Qr.SQL.Text:='insert into listado (Numero,Ruta,Pista,Transcurrido,'+
-                 'Duracion,TxtDuracion) values (:nro,:rta,:pst,:trc,:drc,:txd)';
+    Qr.SQL.Text:='insert into listado (Numero,Ruta,Pista,Transcurrido,Duracion,'+
+                 'TxtDuracion) values (:nro,:rta,:pst,:trc,:drc,:txd)';
     Qr.ParamByName('nro').AsInteger:=I;
     Qr.ParamByName('rta').AsString:=Pista[I].Ruta;
     Qr.ParamByName('pst').AsString:=Pista[I].NombreArch;
