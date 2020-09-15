@@ -45,6 +45,14 @@ Calabozo (Venezuela), julio de 2020.
 
 ---
 
+## Link de descarga de ejecutables
+
+Vienen dos archivos en un comprimido (ReproMusica_XX.rar): ReproMusica.exe y ReproMusica.db
+
+32 bits: https://mega.nz/file/bsUGkKQa#Snlb7AS5jilqaB2dnJ_CkLhI9WGk_UmAz9wMSigdmHU
+
+64 bits: https://mega.nz/file/OxFmVYwY#HKJ2UQtcx_Z34F3WEn5gkwNUNlHrx9452WjlbkPc4eQ
+
 ## Imágenes de la aplicación
 
 ### Icono
