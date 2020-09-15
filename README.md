@@ -35,7 +35,7 @@ Ing. Francisco José Sáez Soto.
 
 e-mail: **fjsaez@gmail.com**
 
-LinkedIn: **linkedin.com/francisco-josé-sáez-soto**
+LinkedIn: **linkedin.com/in/francisco-josé-sáez-soto**
 
 GitHub: **github.com/fjsaez**
 
